@@ -26,8 +26,11 @@ int main(void) {
 	while (1) {
 		memset(sendline, 0, STR_MAX);
 		memset(recvline, 0, STR_MAX);
-		printf("Enter your request: ");
+		printf("\nEnter A Request [ex: TEMP,STEPS] : ");
 		fgets(sendline, STR_MAX-1, stdin);
+
+		str_toupper(sendline);
+
 		if (write(sockfd, sendline, strlen(sendline)+1) < 0) {
 			fprintf(stderr, "write() failed\n");
 			return 3;
@@ -38,7 +41,46 @@ int main(void) {
 			return 4;
 		}
 		
-		printf("Received: %s", recvline);
+		if(strcmp(sendline, "RATE\n") == 0){
+
+			int recvInt = atof(recvline);
+
+			if(recvInt < 100 ){
+				printf("Low Rate! : %s", recvline);
+			}else{
+				printf("Good Rate! : %s", recvline);
+			}
+		}else if(strcmp(sendline, "TEMP\n") == 0){
+
+			int recvFloat = atof(recvline);
+
+			if(recvFloat > 37.8){
+				printf("Fever! : %s", recvline);
+			}else if(recvFloat >= 37.0 && recvFloat <= 37.7) {
+				printf("Normal! : %s", recvline);
+			}else{
+				printf("Low! : %s", recvline);
+			}
+		}else if(strcmp(sendline, "STEPS\n") == 0){
+
+			int recvInt = atof(recvline);
+
+			if(recvInt < 6000 ){
+				printf("Step Goal Not Reached! : %s", recvline);
+			}else{
+				printf("Good Job, Step Goal Reached! : %s", recvline);
+			}
+		}else if(strcmp(sendline, "STATS\n") == 0){
+
+			printf("%s" ,recvline);
+
+		}else if(strcmp(sendline, "RESET\n") == 0){
+
+			printf("%s" ,recvline);
+
+		}
+		
+
 	}
 
 	close(sockfd);

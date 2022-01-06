@@ -1,10 +1,14 @@
-all: clean server client
+build_all: debug release
 
-tcp_server: 
-	gcc -Wall -o server server.c
+rebuild_all: clean_all debug release
 
-client: 
-	gcc -Wall -o client client.c
+debug:
+	gcc -Wall -o bin/dbg/client client.c 
+	gcc -Wall -o bin/dbg/server server.c 
 
-clean:
-	-rm server client
+release: 
+	gcc -Wall -o bin/rel/client client.c
+	gcc -Wall -o bin/rel/server server.c
+
+clean_all:
+	-rm bin/rel/client bin/rel/server bin/dbg/client bin/dbg/server

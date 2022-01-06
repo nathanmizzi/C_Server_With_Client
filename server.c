@@ -4,6 +4,18 @@
 #include <string.h>
 #include "responses.h"
 
+void setStruct(struct recvdCommands *structToReset){
+	structToReset->rateCnt = 0;
+	structToReset->tempCnt = 0;
+	structToReset->stepsCnt = 0;
+}
+
+struct recvdCommands {
+	unsigned int rateCnt;
+	unsigned int tempCnt;
+	unsigned int stepsCnt;
+};
+
 int main(void){
     char str[STR_MAX];
 	int listen_fd, comm_fd;
@@ -36,14 +48,17 @@ int main(void){
 		return -4;
 	}
 
-	while (1) { //keep accepting new clients
+	struct recvdCommands cmdsCounter;
+	setStruct(&cmdsCounter);
+
+	while (1) {
 		comm_fd = accept(listen_fd, (struct sockaddr*) NULL, NULL);
 		if (comm_fd == -1) {
 			fprintf(stderr, "ERROR: accept()\n");
 			return -5;
 		}
 
-		while (1) { //keep reading from connected client
+		while (1) {
 			memset(str, 0, STR_MAX);
 			int num_bytes = read(comm_fd, str, STR_MAX-1);
 			if (num_bytes == -1) {
@@ -53,6 +68,44 @@ int main(void){
 			else if (num_bytes == 0) {
 				printf("Client disconnected normally, waiting for next client...\n");
 				break;
+			}
+
+            if(strcmp(str,"RATE\n") == 0){
+
+				cmdsCounter.rateCnt++;
+
+                int random_number = rand() % 250 + 0;
+
+                sprintf(str,"%d\n",random_number);
+
+            }else if(strcmp(str,"TEMP\n") == 0){
+
+				cmdsCounter.tempCnt++;
+
+				float random_number = 37.4f;
+
+                sprintf(str,"%0.1f\n",random_number);
+
+			}else if(strcmp(str,"STEPS\n") == 0){
+
+				cmdsCounter.stepsCnt++;
+
+				int random_number = rand() % 10000 + 0;
+
+                sprintf(str,"%d\n",random_number);
+
+			}else if(strcmp(str,"STATS\n") == 0){
+
+				int random_number = rand() % 100 + 1;
+
+                sprintf(str,"Battery Life: %d%%, \nTimes Rate Requested: %d, \nTimes Temp Requested: %d, \nTimes steps requested: %d\n",random_number, cmdsCounter.rateCnt, cmdsCounter.tempCnt, cmdsCounter.stepsCnt);
+
+			}else if(strcmp(str,"RESET\n") == 0){
+
+				setStruct(&cmdsCounter);
+
+                sprintf(str,"OK\n");
+
 			}
 
 			printf("Echoing back - %s\n",str);
