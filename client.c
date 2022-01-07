@@ -45,39 +45,36 @@ int main(void) {
 
 			int recvInt = atof(recvline);
 
-			if(recvInt < 100 ){
+			if(recvInt < 100)
 				printf("Low Rate! : %s", recvline);
-			}else{
+			else
 				printf("Good Rate! : %s", recvline);
-			}
+			
+
 		}else if(strcmp(sendline, "TEMP\n") == 0){
 
 			int recvFloat = atof(recvline);
 
-			if(recvFloat > 37.8){
+			if(recvFloat > 37.8)
 				printf("Fever! : %s", recvline);
-			}else if(recvFloat >= 37.0 && recvFloat <= 37.7) {
+			else if(recvFloat >= 37.0 && recvFloat <= 37.7) 
 				printf("Normal! : %s", recvline);
-			}else{
+			else
 				printf("Low! : %s", recvline);
-			}
+			
+
 		}else if(strcmp(sendline, "STEPS\n") == 0){
 
 			int recvInt = atof(recvline);
 
-			if(recvInt < 6000 ){
+			if(recvInt < 6000)
 				printf("Step Goal Not Reached! : %s", recvline);
-			}else{
+			else
 				printf("Good Job, Step Goal Reached! : %s", recvline);
-			}
-		}else if(strcmp(sendline, "STATS\n") == 0){
+			
 
+		}else{
 			printf("%s" ,recvline);
-
-		}else if(strcmp(sendline, "RESET\n") == 0){
-
-			printf("%s" ,recvline);
-
 		}
 		
 

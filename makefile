@@ -1,14 +1,22 @@
-build_all: debug release
+build_all: debug_normal release_normal debug_full release_full
 
-rebuild_all: clean_all debug release
+rebuild_all: clean_all debug_normal release_normal debug_full release_full
 
-debug:
-	gcc -Wall -o bin/dbg/client client.c 
-	gcc -Wall -o bin/dbg/server server.c 
+debug_normal:
+	gcc -Wall -DNormal -o  bin/dbg/clientNormal client.c 
+	gcc -Wall -DNormal -o  bin/dbg/serverNormal server.c 
 
-release: 
-	gcc -Wall -o bin/rel/client client.c
-	gcc -Wall -o bin/rel/server server.c
+release_normal: 
+	gcc -Wall -DNormal -o bin/rel/clientNormal client.c
+	gcc -Wall -DNormal -o bin/rel/serverNormal server.c
+
+debug_full:
+	gcc -Wall -DFull -o  bin/dbg/clientFull client.c 
+	gcc -Wall -DFull -o  bin/dbg/serverFull server.c 
+
+release_full: 
+	gcc -Wall -DFull -o bin/rel/clientFull client.c
+	gcc -Wall -DFull -o bin/rel/serverFull server.c
 
 clean_all:
-	-rm bin/rel/client bin/rel/server bin/dbg/client bin/dbg/server
+	-rm bin/dbg/clientNormal bin/dbg/serverNormal bin/rel/clientNormal bin/rel/serverNormal bin/dbg/clientFull bin/dbg/serverFull bin/rel/clientFull bin/rel/serverFull

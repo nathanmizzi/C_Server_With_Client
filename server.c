@@ -2,13 +2,8 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include "responses.h"
-
-void setStruct(struct recvdCommands *structToReset){
-	structToReset->rateCnt = 0;
-	structToReset->tempCnt = 0;
-	structToReset->stepsCnt = 0;
-}
 
 struct recvdCommands {
 	unsigned int rateCnt;
@@ -16,10 +11,84 @@ struct recvdCommands {
 	unsigned int stepsCnt;
 };
 
+void resetStruct(struct recvdCommands *structToReset){
+	structToReset->rateCnt = 0;
+	structToReset->tempCnt = 0;
+	structToReset->stepsCnt = 0;
+
+	#ifdef Full
+
+		remove("log.csv");
+
+	#endif
+
+}
+
+#ifdef Full
+
+	void convertToCsv(struct recvdCommands *structToConvertToCsv, char *stringToSaveCsvIn){
+		char csvString[STR_MAX];
+		sprintf(csvString, "rateCnt,%d\ntempCnt,%d\nstepsCnt,%d\n", structToConvertToCsv->rateCnt, structToConvertToCsv->tempCnt, structToConvertToCsv->stepsCnt);
+		strcpy(stringToSaveCsvIn,csvString);
+	}
+
+	void writeToFile(char csvToWrite[]){
+
+		FILE *fp = fopen("log.csv", "w");
+		fprintf(fp,"%s",csvToWrite);
+		fclose(fp);
+
+	}
+
+	void readFromFile(struct recvdCommands *structToFill){
+
+		unsigned int cnt = 0;
+		char line[STR_MAX];
+		char cntValue[STR_MAX] = "";
+
+		if(fopen("log.csv", "r")){
+
+			FILE *fp = fopen("log.csv", "r");
+
+			while(fgets(line,STR_MAX,fp)){
+
+				if(cnt == 0){
+					str_getNumbers(line,cntValue);
+					structToFill->rateCnt = atoi(cntValue);
+				}else if(cnt == 1){
+					str_getNumbers(line,cntValue);
+					structToFill->tempCnt = atoi(cntValue);
+				}else if(cnt == 2){
+					str_getNumbers(line,cntValue);
+					structToFill->stepsCnt = atoi(cntValue);
+				}
+
+				cnt++;
+
+			}
+
+			fclose(fp);
+		}else{
+			resetStruct(structToFill);
+		}
+	}
+
+#endif
+
 int main(void){
     char str[STR_MAX];
 	int listen_fd, comm_fd;
 	struct sockaddr_in servaddr;
+	struct recvdCommands cmdsCounter;
+
+	#ifdef Normal
+		resetStruct(&cmdsCounter);
+	#endif
+
+	#ifdef Full
+		char csvToSave[STR_MAX];
+		readFromFile(&cmdsCounter);
+	#endif
 
     listen_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (listen_fd == -1) {
@@ -48,9 +117,6 @@ int main(void){
 		return -4;
 	}
 
-	struct recvdCommands cmdsCounter;
-	setStruct(&cmdsCounter);
-
 	while (1) {
 		comm_fd = accept(listen_fd, (struct sockaddr*) NULL, NULL);
 		if (comm_fd == -1) {
@@ -74,6 +140,11 @@ int main(void){
 
 				cmdsCounter.rateCnt++;
 
+				#ifdef Full
+					convertToCsv(&cmdsCounter,csvToSave);
+					writeToFile(csvToSave);
+				#endif
+
                 int random_number = rand() % 250 + 0;
 
                 sprintf(str,"%d\n",random_number);
@@ -81,14 +152,22 @@ int main(void){
             }else if(strcmp(str,"TEMP\n") == 0){
 
 				cmdsCounter.tempCnt++;
+				
+				#ifdef Full
+					convertToCsv(&cmdsCounter,csvToSave);
+					writeToFile(csvToSave);
+				#endif
 
-				float random_number = 37.4f;
-
-                sprintf(str,"%0.1f\n",random_number);
+                sprintf(str,"%0.1f\n", 37.4f);
 
 			}else if(strcmp(str,"STEPS\n") == 0){
 
 				cmdsCounter.stepsCnt++;
+
+				#ifdef Full
+					convertToCsv(&cmdsCounter,csvToSave);
+					writeToFile(csvToSave);
+				#endif
 
 				int random_number = rand() % 10000 + 0;
 
@@ -102,13 +181,15 @@ int main(void){
 
 			}else if(strcmp(str,"RESET\n") == 0){
 
-				setStruct(&cmdsCounter);
+				resetStruct(&cmdsCounter);
 
                 sprintf(str,"OK\n");
 
+			}else{
+				sprintf(str,"UNKNOWN\n");
 			}
 
-			printf("Echoing back - %s\n",str);
+			printf("\nEchoing back - %s\n",str);
 
 			if (write(comm_fd, str, strlen(str)+1) < 0){
 				fprintf(stderr, "ERROR: read()\n");

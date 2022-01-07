@@ -15,5 +15,19 @@ void str_toupper(char *string) {
     } 
 }
 
+void str_getNumbers(char *stringToSearch, char *stringToSaveTo){
+
+    char cntValue[STR_MAX];
+
+    for(int i = 0; i < strlen(stringToSearch); i++){
+        if(isdigit(stringToSearch[i]) > 0){
+            strncat(cntValue,&stringToSearch[i],1);
+        }	
+    }
+
+    strcpy(stringToSaveTo,cntValue);
+    strcpy(cntValue,"");
+}
+
 
 #endif
