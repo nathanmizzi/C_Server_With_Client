@@ -3,6 +3,9 @@
 
 #include <ctype.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
 
 #define STR_MAX	1024
 #define LISTEN_PORT	54321
@@ -16,17 +19,25 @@ void str_toupper(char *string) {
 }
 
 void str_getNumbers(char *stringToSearch, char *stringToSaveTo){
-
-    char cntValue[STR_MAX];
-
     for(int i = 0; i < strlen(stringToSearch); i++){
         if(isdigit(stringToSearch[i]) > 0){
-            strncat(cntValue,&stringToSearch[i],1);
+            strncat(stringToSaveTo,&stringToSearch[i],1);
         }	
     }
+}
 
-    strcpy(stringToSaveTo,cntValue);
-    strcpy(cntValue,"");
+void writeToFile(char *textToWrite, char *nameOfFile, char fileType[], char *writeMode){
+
+    char tempNameOfFile[100];
+
+    strcpy(tempNameOfFile,nameOfFile);
+
+    strncat(tempNameOfFile, fileType, 5);
+
+    FILE *fp = fopen(tempNameOfFile, writeMode);
+    fprintf(fp,"%s", textToWrite);
+    fclose(fp);
+
 }
 
 

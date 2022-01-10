@@ -1,9 +1,8 @@
 #include <unistd.h>
 #include <netdb.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
 #include "responses.h"
+#include <ctype.h>
+
 
 struct recvdCommands {
 	unsigned int rateCnt;
@@ -15,29 +14,13 @@ void resetStruct(struct recvdCommands *structToReset){
 	structToReset->rateCnt = 0;
 	structToReset->tempCnt = 0;
 	structToReset->stepsCnt = 0;
-
-	#ifdef Full
-
-		remove("log.csv");
-
-	#endif
-
+	remove("log.csv");
 }
-
-#ifdef Full
 
 	void convertToCsv(struct recvdCommands *structToConvertToCsv, char *stringToSaveCsvIn){
 		char csvString[STR_MAX];
-		sprintf(csvString, "rateCnt,%d\ntempCnt,%d\nstepsCnt,%d\n", structToConvertToCsv->rateCnt, structToConvertToCsv->tempCnt, structToConvertToCsv->stepsCnt);
+		sprintf(csvString, "rateCnt,%d\ntempCnt,%d\nstepsCnt,%d", structToConvertToCsv->rateCnt, structToConvertToCsv->tempCnt, structToConvertToCsv->stepsCnt);
 		strcpy(stringToSaveCsvIn,csvString);
-	}
-
-	void writeToFile(char csvToWrite[]){
-
-		FILE *fp = fopen("log.csv", "w");
-		fprintf(fp,"%s",csvToWrite);
-		fclose(fp);
-
 	}
 
 	void readFromFile(struct recvdCommands *structToFill){
@@ -46,11 +29,13 @@ void resetStruct(struct recvdCommands *structToReset){
 		char line[STR_MAX];
 		char cntValue[STR_MAX] = "";
 
-		if(fopen("log.csv", "r")){
+		if(fopen("records.csv", "r")){
 
-			FILE *fp = fopen("log.csv", "r");
+			FILE *fp = fopen("records.csv", "r");
 
 			while(fgets(line,STR_MAX,fp)){
+
+				strcpy(cntValue,"");
 
 				if(cnt == 0){
 					str_getNumbers(line,cntValue);
@@ -73,22 +58,16 @@ void resetStruct(struct recvdCommands *structToReset){
 		}
 	}
 
-#endif
-
 int main(void){
     char str[STR_MAX];
 	int listen_fd, comm_fd;
 	struct sockaddr_in servaddr;
 	struct recvdCommands cmdsCounter;
+	char csvToSave[STR_MAX];
+	char recordsFileName[105] = "records";
+	int steps = rand() % 10000 + 0;
 
-	#ifdef Normal
-		resetStruct(&cmdsCounter);
-	#endif
-
-	#ifdef Full
-		char csvToSave[STR_MAX];
-		readFromFile(&cmdsCounter);
-	#endif
+	readFromFile(&cmdsCounter);
 
     listen_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (listen_fd == -1) {
@@ -140,10 +119,8 @@ int main(void){
 
 				cmdsCounter.rateCnt++;
 
-				#ifdef Full
-					convertToCsv(&cmdsCounter,csvToSave);
-					writeToFile(csvToSave);
-				#endif
+				convertToCsv(&cmdsCounter,csvToSave);
+				writeToFile(csvToSave,recordsFileName,".csv","w");
 
                 int random_number = rand() % 250 + 0;
 
@@ -152,11 +129,9 @@ int main(void){
             }else if(strcmp(str,"TEMP\n") == 0){
 
 				cmdsCounter.tempCnt++;
-				
-				#ifdef Full
-					convertToCsv(&cmdsCounter,csvToSave);
-					writeToFile(csvToSave);
-				#endif
+
+				convertToCsv(&cmdsCounter,csvToSave);
+				writeToFile(csvToSave,recordsFileName,".csv","w");
 
                 sprintf(str,"%0.1f\n", 37.4f);
 
@@ -164,24 +139,22 @@ int main(void){
 
 				cmdsCounter.stepsCnt++;
 
-				#ifdef Full
-					convertToCsv(&cmdsCounter,csvToSave);
-					writeToFile(csvToSave);
-				#endif
+				convertToCsv(&cmdsCounter,csvToSave);
+				writeToFile(csvToSave,recordsFileName,".csv","w");
 
-				int random_number = rand() % 10000 + 0;
-
-                sprintf(str,"%d\n",random_number);
+                sprintf(str,"%d\n",steps);
 
 			}else if(strcmp(str,"STATS\n") == 0){
 
 				int random_number = rand() % 100 + 1;
 
-                sprintf(str,"Battery Life: %d%%, \nTimes Rate Requested: %d, \nTimes Temp Requested: %d, \nTimes steps requested: %d\n",random_number, cmdsCounter.rateCnt, cmdsCounter.tempCnt, cmdsCounter.stepsCnt);
+                sprintf(str,"BATT:%d,RATE:%d,TEMP:%d,STEPS:%d\n",random_number, cmdsCounter.rateCnt, cmdsCounter.tempCnt, cmdsCounter.stepsCnt);
 
 			}else if(strcmp(str,"RESET\n") == 0){
 
 				resetStruct(&cmdsCounter);
+
+				steps = 0;
 
                 sprintf(str,"OK\n");
 
