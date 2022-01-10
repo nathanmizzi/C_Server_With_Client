@@ -3,12 +3,15 @@
 #include "responses.h"
 #include <ctype.h>
 
-
 struct recvdCommands {
 	unsigned int rateCnt;
 	unsigned int tempCnt;
 	unsigned int stepsCnt;
 };
+
+void resetBuffer(char *buffer){
+	strcpy(buffer,"");
+}
 
 void resetStruct(struct recvdCommands *structToReset){
 	structToReset->rateCnt = 0;
@@ -17,57 +20,56 @@ void resetStruct(struct recvdCommands *structToReset){
 	remove("log.csv");
 }
 
-	void convertToCsv(struct recvdCommands *structToConvertToCsv, char *stringToSaveCsvIn){
-		char csvString[STR_MAX];
-		sprintf(csvString, "rateCnt,%d\ntempCnt,%d\nstepsCnt,%d", structToConvertToCsv->rateCnt, structToConvertToCsv->tempCnt, structToConvertToCsv->stepsCnt);
-		strcpy(stringToSaveCsvIn,csvString);
-	}
+void convertToCsv(struct recvdCommands *structToConvertToCsv, char *stringToSaveCsvIn){
+	char csvString[STR_MAX];
+	sprintf(csvString, "rateCnt,%d\ntempCnt,%d\nstepsCnt,%d", structToConvertToCsv->rateCnt, structToConvertToCsv->tempCnt, structToConvertToCsv->stepsCnt);
+	strcpy(stringToSaveCsvIn,csvString);
+}
 
-	void readFromFile(struct recvdCommands *structToFill){
+void readFromFile(struct recvdCommands *structToFill, char *buffer){
 
-		unsigned int cnt = 0;
-		char line[STR_MAX];
-		char cntValue[STR_MAX] = "";
+	unsigned int cnt = 0;
+	char line[STR_MAX];
 
-		if(fopen("records.csv", "r")){
+	if(fopen("records.csv", "r")){
 
-			FILE *fp = fopen("records.csv", "r");
+		FILE *fp = fopen("records.csv", "r");
 
-			while(fgets(line,STR_MAX,fp)){
+		while(fgets(line,STR_MAX,fp)){
 
-				strcpy(cntValue,"");
+			resetBuffer(buffer);
 
-				if(cnt == 0){
-					str_getNumbers(line,cntValue);
-					structToFill->rateCnt = atoi(cntValue);
-				}else if(cnt == 1){
-					str_getNumbers(line,cntValue);
-					structToFill->tempCnt = atoi(cntValue);
-				}else if(cnt == 2){
-					str_getNumbers(line,cntValue);
-					structToFill->stepsCnt = atoi(cntValue);
-				}
-
-				cnt++;
-
+			if(cnt == 0){
+				str_getNumbers(line,buffer);
+				structToFill->rateCnt = atoi(buffer);
+			}else if(cnt == 1){
+				str_getNumbers(line,buffer);
+				structToFill->tempCnt = atoi(buffer);
+			}else if(cnt == 2){
+				str_getNumbers(line,buffer);
+				structToFill->stepsCnt = atoi(buffer);
 			}
 
-			fclose(fp);
-		}else{
-			resetStruct(structToFill);
+			cnt++;
+
 		}
+
+		fclose(fp);
+	}else{
+		resetStruct(structToFill);
 	}
+}
 
 int main(void){
     char str[STR_MAX];
+	char buffer[STR_MAX] = "";
 	int listen_fd, comm_fd;
 	struct sockaddr_in servaddr;
 	struct recvdCommands cmdsCounter;
-	char csvToSave[STR_MAX];
 	char recordsFileName[105] = "records";
 	int steps = rand() % 10000 + 0;
 
-	readFromFile(&cmdsCounter);
+	readFromFile(&cmdsCounter, buffer);
 
     listen_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (listen_fd == -1) {
@@ -119,8 +121,10 @@ int main(void){
 
 				cmdsCounter.rateCnt++;
 
-				convertToCsv(&cmdsCounter,csvToSave);
-				writeToFile(csvToSave,recordsFileName,".csv","w");
+				convertToCsv(&cmdsCounter,buffer);
+				writeToFile(buffer,recordsFileName,".csv","w");
+
+				resetBuffer(buffer);
 
                 int random_number = rand() % 250 + 0;
 
@@ -130,8 +134,10 @@ int main(void){
 
 				cmdsCounter.tempCnt++;
 
-				convertToCsv(&cmdsCounter,csvToSave);
-				writeToFile(csvToSave,recordsFileName,".csv","w");
+				convertToCsv(&cmdsCounter,buffer);
+				writeToFile(buffer,recordsFileName,".csv","w");
+
+				resetBuffer(buffer);
 
                 sprintf(str,"%0.1f\n", 37.4f);
 
@@ -139,8 +145,10 @@ int main(void){
 
 				cmdsCounter.stepsCnt++;
 
-				convertToCsv(&cmdsCounter,csvToSave);
-				writeToFile(csvToSave,recordsFileName,".csv","w");
+				convertToCsv(&cmdsCounter,buffer);
+				writeToFile(buffer,recordsFileName,".csv","w");
+
+				resetBuffer(buffer);
 
                 sprintf(str,"%d\n",steps);
 

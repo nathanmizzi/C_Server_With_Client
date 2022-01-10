@@ -28,16 +28,15 @@ void str_getNumbers(char *stringToSearch, char *stringToSaveTo){
 
 void writeToFile(char *textToWrite, char *nameOfFile, char fileType[], char *writeMode){
 
-    char tempNameOfFile[100];
+    char tempFileName[105];
 
-    strcpy(tempNameOfFile,nameOfFile);
+    strcpy(tempFileName,nameOfFile);
 
-    strncat(tempNameOfFile, fileType, 5);
+    strncat(tempFileName, fileType, 5);
 
-    FILE *fp = fopen(tempNameOfFile, writeMode);
+    FILE *fp = fopen(tempFileName, writeMode);
     fprintf(fp,"%s", textToWrite);
     fclose(fp);
-
 }
 
 

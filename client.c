@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 		if(argc == 2){
 			strcpy(fileName,argv[1]);
 		}else{
-			printf("No arguments supplied, using default logname: log");
+			printf("No arguments supplied, using default logname: log\n");
 		}
 
 	#endif
@@ -130,11 +130,11 @@ int main(int argc, char *argv[]) {
 				makeLog(buffer,recvline,fileName);
 			#endif
 
-			int battery = 0;
-			int rate = 0;
-			int temp = 0;
-			int steps = 0;
-			int cnt = 0;
+			unsigned int battery = 0;
+			unsigned int rate = 0;
+			unsigned int temp = 0;
+			unsigned int steps = 0;
+			unsigned int cnt = 0;
 			char *token;
 
 			token = strtok(recvline,":");
